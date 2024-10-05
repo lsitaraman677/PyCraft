@@ -22,6 +22,7 @@ class Contour:
         data = list(curImage.getdata())
         # Get the width and height of the image
         width, height = curImage.size
+        print(f'image succesfully loaded! Size: {width} x {height}')
         # Define a lambda to convert an x, y coordinate (x is right, y is up) to the (r,g,b,o) values at that point
         getPixel = lambda x, y: data[(height-y-1)*width + x][:3]
         
@@ -58,6 +59,7 @@ class Contour:
         ## track the contours and store them in x and y
 
         # Loop until dist is less than 0.75*step (the start point has connected back to the end point): 
+        print('beginning path generation...')
         while dist > (step*0.75):
             # Add the current location to the arrays
             x.append(centerX)
@@ -87,6 +89,7 @@ class Contour:
         # Initialize the members self.xVals and self.yVals
         self.xVals = np.array(x)
         self.yVals = np.array(y)
+        print('part contour identified! Scaling contour values...')
 
         #### Modify the values to match the expected center and scale ####
 
@@ -126,8 +129,10 @@ class Contour:
         # Translate values
         self.xVals += position[0] - reference[0]
         self.yVals += position[1] - reference[1]
+        print('Scaling complete! Contour generated. Bounding rectangle (left x, bottom y, width, height): ', end='')
+        print(f'{(position[0] - reference[0], position[1] - reference[1], w, h)}')
 
-
+    # Return a contour object that is a copy of self
     def copy(self):
         res = contour(None, None, None, None)
         res.xVals = self.xVals
@@ -135,20 +140,23 @@ class Contour:
         res.pos = self.pos
         return res
 
+    # Scale in x and y
     def scale(self, kx, ky):
         self.xVals = (self.xVals - self.pos[0])*kx + self.pos[0]
         self.yVals = (self.yVals - self.pos[1])*ky + self.pos[1]
 
+    # Set the center of the part (defined by reference)
     def setCenter(self, newX, newY):
         self.xVals += newX - self.pos[0]
         self.yVals += newY - self.pos[1]
         pos = (newX, newY)
         
-
+    # Set the reference for the part relative to the current reference
     def setRelativeReference(self, rx, ry):
         self.xVals += rx
         self.yVals += ry
 
+    # Set the reference for the part from the bottom left corner
     def setAbsoluteReference(self, rx, ry):
         # Get min values:
         xMin = np.min(self.xVals)
@@ -162,13 +170,78 @@ class Contour:
         self.xVals += shiftX
         self.yVals += shiftY
 
+    # Set the width of the part to a specified amount
     def setWidth(self, w):
         curWidth = (np.max(self.xVals) - np.min(self.xVals))
         self.scale(w / curWidth, 1)
 
+    # Set the height of the part to a specified amount
     def setHeight(self, h):
         curHeight = (np.max(self.yVals) - np.min(self.yVals))
         self.scale(1, h / curHeight)
+
+    # Get an array of strings representing the lines of gcode to follow the contour
+    def get_gcode(self, partDepth, retractHeight, bitDiam, bitOut, feedRate, plungeRate, spindleSpeed, passes=1, direction=1, finalPassDepth=0, extraDepth=0.05, slopePoints=2, spiral=False):
+
+        def getOffsetPoint(idx):
+            curX = self.xVals[idx]
+            curY = self.yVals[idx]
+            nextIdx = np.mod((idx+3), points)
+            prevIdx = np.mod((idx-3), points)
+            dx = self.xVals[nextIdx] - self.xVals[prevIdx]
+            dy = self.yVals[nextIdx] - self.yVals[prevIdx]
+            normFact = bitDiam / ((dx**2 + dy**2)**0.5)
+            curX += dy * normFact * inFact
+            curY += -dx * normFact * inFact
+            return curX, curY
+
+        depth_per_pass = (partDepth + extraDepth - finalPassDepth) / passes
+        points = len(self.xVals)
+        inFact = 1 if bitOut else -1
+        startX, startY = getOffsetPoint(0)
+        lines = [f'M{3 if (direction==1) else 4} S{spindleSpeed}', f'G0 X{startX} Y{startY} Z{retractHeight} F100']
+        curZ = None 
+        if spiral:
+            curZ = (lambda p, i: partDepth - depth_per_pass*p - depth_per_pass*i/points) 
+        else:
+            curZ = (lambda p, i: partDepth - depth_per_pass*(p+1))
+
+        for passNum in range(passes):
+            for i in range(points):
+                curX, curY = getOffsetPoint(i)
+                curLine = f'G1 X{curX} Y{curY} Z{curZ(passNum, i)}'
+                F = ''
+                if(spiral):   
+                    if(passNum == 0):
+                        if(i == 0):     F = f' F{plungeRate}'
+                        elif(i == 1):   F = f' F{feedRate}'
+                else:
+                    if(i == 0):         F = f' F{plungeRate}'
+                    elif(i == 1):       F = f' F{feedRate}'
+                curLine += F
+                lines.append(curLine)
+
+        if spiral or (finalPassDepth > 0):
+            lines.append(f'G1 X{startX} Y{startY} Z{-extraDepth} F{plungeRate}')
+            for i in range(1, points):
+                curX = self.xVals[i]
+                curY = self.yVals[i]
+                nextIdx = np.mod((i+3), points)
+                prevIdx = np.mod((i-3), points)
+                dx = self.xVals[nextIdx] - self.xVals[prevIdx]
+                dy = self.yVals[nextIdx] - self.yVals[prevIdx]
+                normFact = bitDiam / ((dx**2 + dy**2)**0.5)
+                curX += dy * normFact * inFact
+                curY += -dx * normFact * inFact
+                curLine = f'G1 X{curX} Y{curY}' + (f' F{feedRate}' if (i==1) else '')
+                lines.append(curLine)
+
+        lines.append(f'G0 X{startX} Y{startY} Z{retractHeight} F{plungeRate}')
+
+        return lines
+            
+
+
 
 
 
