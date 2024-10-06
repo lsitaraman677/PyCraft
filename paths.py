@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 
+# Represents a general contour, generated from a screenshot
 class Contour:
 
     def __init__(self, filename, width_in, height_in, position, reference=(0, 0), thetaStep=0.08727, step=10):
@@ -180,26 +181,28 @@ class Contour:
         curHeight = (np.max(self.yVals) - np.min(self.yVals))
         self.scale(1, h / curHeight)
 
-    # Get an array of strings representing the lines of gcode to follow the contour
-    def get_gcode(self, partDepth, retractHeight, bitDiam, bitOut, feedRate, plungeRate, spindleSpeed, passes=1, direction=1, finalPassDepth=0, extraDepth=0.05, slopePoints=2, spiral=False):
+    # Helper method for get_gcode
+    def getOffsetPoint(self, idx, bitDiam, inFact):
+        points = len(self.xVals)
+        curX = self.xVals[idx]
+        curY = self.yVals[idx]
+        nextIdx = np.mod((idx+3), points)
+        prevIdx = np.mod((idx-3), points)
+        dx = self.xVals[nextIdx] - self.xVals[prevIdx]
+        dy = self.yVals[nextIdx] - self.yVals[prevIdx]
+        normFact = bitDiam / ((dx**2 + dy**2)**0.5)
+        curX += dy * normFact * inFact
+        curY += -dx * normFact * inFact
+        return curX, curY
 
-        def getOffsetPoint(idx):
-            curX = self.xVals[idx]
-            curY = self.yVals[idx]
-            nextIdx = np.mod((idx+3), points)
-            prevIdx = np.mod((idx-3), points)
-            dx = self.xVals[nextIdx] - self.xVals[prevIdx]
-            dy = self.yVals[nextIdx] - self.yVals[prevIdx]
-            normFact = bitDiam / ((dx**2 + dy**2)**0.5)
-            curX += dy * normFact * inFact
-            curY += -dx * normFact * inFact
-            return curX, curY
+    # Get an array of strings representing the lines of gcode to follow the contour
+    def get_gcode(self, partDepth, retractHeight, bitDiam, bitOut, feedRate, plungeRate, spindleSpeed, passes=1, direction=1, finalPassDepth=0, extraDepth=0.05, spiral=False):
 
         depth_per_pass = (partDepth + extraDepth - finalPassDepth) / passes
         points = len(self.xVals)
         inFact = 1 if bitOut else -1
-        startX, startY = getOffsetPoint(0)
-        lines = [f'M{3 if (direction==1) else 4} S{spindleSpeed}', f'G0 X{startX} Y{startY} Z{retractHeight} F100']
+        startX, startY = self.getOffsetPoint(0, bitDiam, inFact)
+        lines = [f'M{3 if (direction==1) else 4} S{spindleSpeed}', f'G0 X{startX} Y{startY} Z{retractHeight}']
         curZ = None 
         if spiral:
             curZ = (lambda p, i: partDepth - depth_per_pass*p - depth_per_pass*i/points) 
@@ -208,7 +211,7 @@ class Contour:
 
         for passNum in range(passes):
             for i in range(points):
-                curX, curY = getOffsetPoint(i)
+                curX, curY = self.getOffsetPoint(i, bitDiam, inFact)
                 curLine = f'G1 X{curX} Y{curY} Z{curZ(passNum, i)}'
                 F = ''
                 if(spiral):   
@@ -224,24 +227,96 @@ class Contour:
         if spiral or (finalPassDepth > 0):
             lines.append(f'G1 X{startX} Y{startY} Z{-extraDepth} F{plungeRate}')
             for i in range(1, points):
-                curX = self.xVals[i]
-                curY = self.yVals[i]
-                nextIdx = np.mod((i+3), points)
-                prevIdx = np.mod((i-3), points)
-                dx = self.xVals[nextIdx] - self.xVals[prevIdx]
-                dy = self.yVals[nextIdx] - self.yVals[prevIdx]
-                normFact = bitDiam / ((dx**2 + dy**2)**0.5)
-                curX += dy * normFact * inFact
-                curY += -dx * normFact * inFact
+                curX, curY = self.getOffsetPoint(i, bitDiam, inFact)
                 curLine = f'G1 X{curX} Y{curY}' + (f' F{feedRate}' if (i==1) else '')
                 lines.append(curLine)
 
-        lines.append(f'G0 X{startX} Y{startY} Z{retractHeight} F{plungeRate}')
+        lines.append(f'G0 X{startX} Y{startY} Z{retractHeight}')
 
         return lines
-            
+    
+# An elliptical path. Inherits Contour.
+class Ellipse(Contour):
 
+    def __init__(self, w, h, position, thetaStep=0.08727):
+        # Set the position
+        self.pos = position
 
+        # Set up for loop
+        theta = 0
+        xv = []
+        yv = []
+        x = position[0] + w*0.5
+        y = position[1] + h*0.5
+        xRad = w*0.5
+        yRad = h*0.5
 
+        # Add points to xv and yv as theta goes from 0 to 2pi
+        print('beginning path generation')
+        while theta < (2*np.pi):
+            xv.append(np.cos(theta)*xRad + x)
+            yv.append(np.sin(theta)*yRad + y)
+            theta += thetaStep
+        
+        xv.append(position[0] + w)
+        yv.append(position[1] + yRad)
+
+        # Set the members xVals and yVals
+        self.xVals = np.array(xv)
+        self.yVals = np.array(yv)
+
+        print(f'path generated. Bounding rectangle (x, y, w, h): ({position[0]}, {position[1]}, {w}, {h})')
+
+    # Prevent the call of setRelativeReference
+    def setRelativeReference(self, a, b):
+        return
+    
+    # Prevent the call of setAbsoluteReference
+    def setAbsoluteReference(self, a, b):
+        return
+
+# A rectanglular path. Inherits Contour.
+class Rectangle(Contour):
+
+    def __init__(self, w, h, position, reference=(0, 0)):
+        # Set xVals and yVals
+        print('rect')
+        self.xVals = np.array([position[0], position[0] + w, position[0] + w, position[0], position[0]])
+        self.yVals = np.array([position[1], position[1], position[1] + h, position[1] + h, position[1]])
+        self.pos = position
+    
+    def getOffsetPoint(self, idx, bitDiam, inFact):
+        curX = None
+        curY = None
+        if (idx == 0) or (idx == 3) or (idx == 4):
+            curX = self.xVals[idx] - bitDiam*inFact
+        else:
+            curX = self.xVals[idx] + bitDiam*inFact
+
+        if (idx == 0) or (idx == 1) or (idx == 4):
+            curY = self.yVals[idx] - bitDiam*inFact
+        else:
+            curY = self.yVals[idx] + bitDiam*inFact
+
+        return curX, curY
+
+        
+    
+
+class HolePath:
+
+    def __init__(self, holeList, offset=(0, 0)):
+        self.holes = [(i[0]+offset[0], i[1]+offset[1]) for i in holeList]
+        self.xVals = np.array([i[0] for i in holeList])
+        self.yVals = np.array([i[1] for i in holeList])
+        print('holepath')
+
+    def get_gcode(self, retractHeight, plungeRate, spindleSpeed, direction=1, extraDepth=0.05):
+        lines = [f'M{3 if (direction==1) else 4} S{spindleSpeed}']
+        for hole in self.holes:
+            lines.append(f'G0 X{hole[0]} Y{hole[1]} Z{retractHeight}')
+            lines.append(f'G1 X{hole[0]} Y{hole[1]} Z{-extraDepth} F{plungeRate}')
+            lines.append(f'G0 X{hole[0]} Y{hole[1]} Z{retractHeight}')
+        return lines
 
 

@@ -1,11 +1,13 @@
-from paths import Contour
+from paths import *
 from matplotlib import pyplot as plt
 
 
 pos = (0, 0)
 w = 13.939 * 25.4
 h = 7.234 * 25.4
-a = Contour('demoPart.png', w, h, pos)
+a = Contour('images/demoPart.png', w, h, pos)
+#a = Ellipse(w, h, pos)
+#a = Rectangle(w, h, pos)
 
 plt.plot(a.xVals, a.yVals)
 plt.plot([pos[0], pos[0] + w, pos[0] + w, pos[0], pos[0]], [pos[1], pos[1], pos[1] + h, pos[1] + h, pos[1]])
