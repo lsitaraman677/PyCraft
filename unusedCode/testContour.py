@@ -1,11 +1,12 @@
+import sys
+sys.path.append('../')
 from paths import *
 from matplotlib import pyplot as plt
-
 
 pos = (0, 0)
 w = 13.939 * 25.4
 h = 7.234 * 25.4
-a = Contour('images/demoPart.png', w, h, pos)
+a = Contour('../images/demoPart.png', w, h, pos)
 #a = Ellipse(w, h, pos)
 #a = Rectangle(w, h, pos)
 
@@ -15,7 +16,7 @@ plt.gca().axis('equal')
 plt.show()
 l = a.get_gcode(partDepth=6.35, retractHeight=10, bitOut=True, bitDiam=6, feedRate=100, plungeRate=20, spindleSpeed=5000, spiral=True)
 
-with open('ncFiles/demoPart.nc', 'w') as f:
+with open('../ncFiles/demoPart.nc', 'w') as f:
     lines = []
     lines.append('G17 G21 G90 G94\n')
     for i in l:

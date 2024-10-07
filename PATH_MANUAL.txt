@@ -1,0 +1,79 @@
+---- Path Manual ----
+
+note: ALL UNITS IN MILLIMETERS!
+
+** Path types: **
+
+Contour:
+This generates a contour path from a screenshot. The following line explains how to use it:
+Contour('pic.png',        10,                             10,                 (0, 0))
+	^^^^^^^^^         ^^                              ^^                  ^^^^^^^
+        name of file      width of part (minX to maxX)    height of part      location of bottom left corner of the bounding box of the part
+
+Additional optional parameters:
+reference: tuple with two numbers: the x and y coordinates of the reference point relative to the bottom left corner of the bounding box.
+This reference point is what defines the location of the part. The part is positioned such that the reference point, which is at the 
+bottom left corner (0, 0) by default, is at the specified location.
+
+step: The distance between points along the edge of the part
+
+thetaStep: The amount in radians that the angle of the rotating beam changes by. This should not be changed for the most part.
+
+
+Rectangle:
+This creates a rectangle path. The following line explains how to use it:
+Rectangle(100,                  100,                   (0, 0))
+          ^^^                   ^^^                    ^^^^^^
+          width of rectangle    height of rectangle    location of bottom left corner of rectangle
+
+Additional optional parameters:
+reference: tuple with two numbers: the x and y coordinates of the reference point relative to the bottom left corner of the Rectangle
+This reference point is what defines the location of the rectangle. The rectangle is positioned such that the reference point, which is at the
+bottom left corner (0, 0) by default, is at the specified location.
+
+
+Ellipse:
+This creates an elliptical path. The following line explains how to use it:
+Ellipse(100,              100,                (0, 0))
+	^^^               ^^^                 ^^^^^^
+	total width       total height        location of bottom left corner of bounding box
+
+note: Ellipse parameters are identical to that of Rectangle, and the ellipse generated will be bounded by the rectangle that is formed
+with the specified parameters. (i.e. Ellipse(10, 10, (0, 0)) will be exactly contained by a rectangle at 0, 0, with width and height 10)
+
+
+HolePath:
+This one's slightly different. It creates a path for drilling simple holes, just down and up. There is no x and y movement while in the part.
+The following line explains how to use it:
+HolePath([(0, 0), (1, 1), (2, 2), (0, 3), (3, 0)])
+	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         This is the only required argument for HolePath. It is a list of length-2 tuples (two numbers in parenthesis) that represent all 
+	 of the locations that a hole should be drilled. In this case, there are 5 total holes to be drilled, so the list has 5 pairs
+         of x-y coordinates.
+
+Additional optional parameters:
+offset: tuple with two numbers, x and y, that all x and y coordinates in the hole list will be offsetted by. For example,
+[(0, 0), (1, 1), (2, 2)] with an offset of (1, 3) would become [(1, 3), (2, 4), (3, 5)]
+
+
+
+note: If certain paths have patterns but are complex and cumbersome to enter, you can use loops or other scripts to generate them. 
+For example, if you had a 5 by 5 grid of holes, it would be annoying to enter all of the coordinates one by one. In order to use loops or
+more advanced procedures in the user.py file, you can make use of scripts.py, in which you can make a function. Here is an example:
+
+In scripts.py:
+def pattern1:
+  # Make a 5 by 5 grid
+  res = []
+  for i in range(0, 12, 2):
+    for j in range(0, 12, 2):
+      res.append((i, j))
+  return res
+
+In user.py:
+HolePath(pattern1())
+retractHeight=10, plungeRate=20, spindleSpeed=5000
+
+It is worth noting that if you name your function something else like 'lines', there will be ambiguity in run.py. Try to use specific names
+that are unlikely to be used elsewhere.
+

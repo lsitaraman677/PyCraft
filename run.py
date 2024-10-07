@@ -1,5 +1,6 @@
 from paths import *
 from gcode import generate_full_nc
+from scripts import *
 import sys
 
 pathStrings = []

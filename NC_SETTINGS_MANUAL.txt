@@ -1,0 +1,59 @@
+---- nc settings manual ----
+
+note: ALL UNITS IN MILLIMETERS!
+note: machine should be zeroed AT THE TOP OF THE WASTEBOARD, not at the top of the part
+
+** Possible options: **
+
+Rectangle, Ellipse, and Contour:
+
+Required values:
+
+partDepth - the thickness of the part
+
+retractHeight - the height to retract to when not cutting through the part and just repositioning tool
+
+bitOut - boolean parameter: true when the bit is outside the contour and cutting around the part, false when cutting on the inside.
+For example, a pocket within a part would be bitOut = False, since the bit is cutting on the inside.
+
+bitDiam - the diameter of the bit
+
+feedRate - the speed to move at when cutting sideways
+
+plungeRate - the speed to move at when plunging directly down into the part
+
+spindleSpeed - the speed of the drill in revolutions per minute
+
+Optional values:
+
+passes - the number of times the tool follows the contour, each time getting a little bit deeper. The default is 1, though note that in 
+most cases this should be modified to be larger, such that the maximum amount the tool is cutting is less than 40% of the tool diameter. 
+For example, if the part is 6.35mm, and the bit is 5mm, it would be safe to do 4 passes
+
+spiral - boolean parameter: when True, the bit will spiral down into the part instead of going down in steps. Default is false.
+
+finalPassDepth - The amount to cut on the final pass. The final pass is in addition to the number of passes, and is to ensure a clean
+finish. If spiral is True, a final pass will happen to ensure cutting all the way through the part. Otherwise, if finalPassDepth is left
+at the default value of zero, no final pass will happen.
+
+extraDepth - The amount to pierce through the wasteboard past the bottom of the part. This should remain at the default of 0.002 mils or 0.05 mm
+
+direction - The direction of the spindle's rotation. 1 is clockwise, -1 is counterclockwise. Default is clockwise.
+
+HolePath:
+
+Required values:
+
+retractHeight - the height to return to after making a hole in the part
+
+plungeRate - the speed in mm per minute when moving down into the part to make a hole
+
+spindleSpeed - the speed of the spindle
+
+Optional values:
+
+extraDepth:  The amount to pierce through the wasteboard past the bottom of the part. This should remain at the default of 0.002 mils or 0.05 mm
+
+direction - The direction of the spindle's rotation. 1 is clockwise, -1 is counterclockwise. Default is clockwise.
+
+
