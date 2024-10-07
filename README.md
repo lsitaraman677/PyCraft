@@ -31,4 +31,15 @@ python3 run.py filename.nc
 You should replace 'filename.nc' with whatever file name you want the generated nc program to have
 
 
-##### That process was brief, and is certainly not enough to begin generating nc programs.\nIn order to better understand, you should watch tutorial.mp4, which displays the full process of \nsetting up and generating nc code for a part. You may also want to take a look at NC\_SETTINGS\_MANUAL.txt or PATH\_MANUAL.txt for specific information. The vast majority of 
+That process was brief, and is certainly not enough to begin generating nc programs. In order to better understand, you should watch 
+tutorial.mp4, which displays the full process of setting up and generating nc code for a part. You may also want to take a look at 
+NC\_SETTINGS\_MANUAL.txt or PATH\_MANUAL.txt for specific information. The vast majority of operations will only require you to edit
+the user.py file. The scripts.py file may also be used for more complex operations, but other than that, all other codes should not
+be modified for the most part. If you have any questions, contact me at lsitaraman677@student.fuhsd.org or ask me at robotics.
+
+
+#### Author:
+Leo Sitaraman
+#### Last modified:
+10 / 7 / 2024
+
