@@ -3,7 +3,7 @@
 # In the line below, replace Contour with whatever path you want to create (Contour, HolePath, Rectangle, Ellipse).
 # Then, enter the correct settings within the parentheses that follow. The settings will defer for different types of paths, so check
 # PATH_MANUAL.txt for more information.
-Contour('weirdShape.png', 100, 100, (0,0))
+Contour('images/exampleScreenshots/weirdShape.png', 100, 100, (0,0))
 
 # In the line below, choose the settings for the machine. These settings will be used to generate the nc program. Don't break a bit!
 # If you are unsure how to use these settings, take a look at NC_SETTINGS_MANUAL.txt for more information.

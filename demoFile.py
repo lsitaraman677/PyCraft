@@ -1,7 +1,7 @@
 # This file is an example of how a file used by run.py to create an nc program might look!
 
 # First path: Contour:
-Contour('images/demoPart.png', 100, 100, (0, 0))
+Contour('images/exampleScreenshots/demoPart.png', 100, 100, (0, 0))
 partDepth=6.35, retractHeight=10, bitOut=True, bitDiam=6, feedRate=100, plungeRate=20, spindleSpeed=5000, passes=3, spiral=True
 
 # Second path: Ellipse:
