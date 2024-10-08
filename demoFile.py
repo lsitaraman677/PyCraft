@@ -15,3 +15,7 @@ partDepth=6.35, retractHeight=10, bitOut=True, bitDiam=6, feedRate=100, plungeRa
 # Fourth path: HolePath:
 HolePath([(0, 0), (-40, 0), (40, 0), (0, 40), (0, -40)], offset=(150, 150))
 retractHeight=10, plungeRate=20, spindleSpeed=5000
+
+# Fifth path: HolePath:
+HolePath(linearPattern(xNum=6, yNum=6, xGap=10, yGap=10, pos=(200, 200)))
+retractHeight=10, plungeRate=20, spindleSpeed=5000
