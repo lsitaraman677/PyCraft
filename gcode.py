@@ -15,7 +15,7 @@ def generate_nc_files(contour_paths, basename):
             oldTypes.append([curType, 1])
             count = 1
 
-        with open(basename + f'_{curType}{count}', 'w') as f:
+        with open(basename + f'_{curType}{count}.nc', 'w') as f:
             lines = ['%\n', '(--- PyCraft generated nc program ---)\n', 'G17 G21 G90 G94\n']
             lines.append('\n')
             lines.append('\n')
