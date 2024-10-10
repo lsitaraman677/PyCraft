@@ -26,9 +26,16 @@ drillbit, you can use HolePath. Finally, for more complex paths, follow these st
 
 Finally, generate the gcode by running the run.py python file. You should use the following command:
 
-python3 run.py filename.nc
+python3 run.py base_filename
 
-You should replace 'filename.nc' with whatever file name you want the generated nc program to have
+You should replace 'base_filename' with whatever base file name you want the generated nc program to 
+have. All .nc files generated with this command will start with 'basename_'. For example, if you have
+two Contour paths and two HolePath paths, the command 'python3 run.py part1' will result in the 
+following files being created:\
+part1_Contour1.nc\
+part1_Contour2.nc\
+part1_HolePath1.nc\
+part1_HolePath2.nc
 
 
 That process was brief, and is certainly not enough to begin generating nc programs. In order to better understand, you should watch 

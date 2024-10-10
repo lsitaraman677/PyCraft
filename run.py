@@ -1,5 +1,5 @@
 from paths import *
-from gcode import generate_full_nc
+from gcode import generate_nc_files
 from scripts import *
 import sys
 
@@ -32,7 +32,7 @@ for i in range(count // 2):
     exec(createNC)
     ncInfo.append([lines, c])
 
-generate_full_nc(ncInfo, f'ncFiles/{sys.argv[1]}')
+generate_nc_files(ncInfo, f'ncFiles/{sys.argv[1]}')
 
 
 
