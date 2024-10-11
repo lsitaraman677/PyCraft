@@ -1,10 +1,11 @@
 import numpy as np
+from matplotlib import pyplot as plt
 from PIL import Image
 
 # Represents a general contour, generated from a screenshot
 class Contour:
 
-    def __init__(self, filename, width_in, height_in, position, reference=(0, 0), thetaStep=0.08727, step=10):
+    def __init__(self, filename, width_in, height_in, position, reference=(0, 0), thetaStep=0.08727, step=20, istep=1, convNum=20):
         
         #### Create default instance if any inputs are None ####
         if (filename is None):
@@ -53,7 +54,7 @@ class Contour:
         x = []
         y = []
         # Make sure dist is larger than step
-        dist = step + 1
+        dist = istep + 1
 
         ## The following loop traces the outer edge of the contour by rotating a segment of length step 
         ## and checking when it contacts the part. It's basically rolling a ball around the part to
@@ -61,19 +62,19 @@ class Contour:
 
         # Loop until dist is less than 0.75*step (the start point has connected back to the end point): 
         print('beginning path generation...')
-        while dist > (step*0.75):
+        while dist > (istep*0.75):
             # Add the current location to the arrays
             x.append(centerX)
             y.append(centerY)
             # Calculate the point to check based on theta, step, and the current location
-            curX = round(np.cos(theta)*step + centerX)
-            curY = round(np.sin(theta)*step + centerY)
+            curX = round(np.cos(theta)*istep + centerX)
+            curY = round(np.sin(theta)*istep + centerY)
             # While the current point to check isn't on the part's edge:
             while(sum(getPixel(curX, curY)) > 760):
                 # Increment theta (counterclockwise)
                 theta += thetaStep
-                curX = round(np.cos(theta)*step + centerX)
-                curY = round(np.sin(theta)*step + centerY)
+                curX = round(np.cos(theta)*istep + centerX)
+                curY = round(np.sin(theta)*istep + centerY)
             # Once the next point has been found, calculate the distance to see if the end has been reached    
             dist = ((curX - x[0])**2 + (curY - y[0])**2)**0.5
             # Update the current center
@@ -83,13 +84,30 @@ class Contour:
             # Update theta
             theta += np.pi + np.pi/2
 
-        # Complete the loop by adding the first point onto the end
-        x.append(x[0])
-        y.append(y[0])
+        # Apply a convolution
+        newX = []
+        newY = []
+        curIdx = 0
+        idxStep = int(step / istep)
+        while(curIdx < len(x)):
+            avgX = 0
+            avgY = 0
+            for i in range(convNum):
+                idx = (curIdx + i) % len(x)
+                avgX += x[idx]
+                avgY += y[idx]
+            avgX /= len(x)
+            avgY /= len(y)
+            newX.append(avgX)
+            newY.append(avgY)
+            curIdx += idxStep
+
+        newX.append(newX[0])
+        newY.append(newY[0])
 
         # Initialize the members self.xVals and self.yVals
-        self.xVals = np.array(x)
-        self.yVals = np.array(y)
+        self.xVals = np.array(newX)
+        self.yVals = np.array(newY)
         print('part contour identified! Scaling contour values...')
 
         #### Modify the values to match the expected center and scale ####
