@@ -303,6 +303,11 @@ class Ellipse(Contour):
     def setAbsoluteReference(self, a, b):
         return
 
+# A circular path. Inherits Ellipse
+class Circle(Ellipse):
+    def __init__(self, pos, rad, thetaStep=0.08727):
+        super().__init__(rad*2, rad*2, (pos[0]-rad, pos[1]-rad), thetaStep=thetaStep)
+
 # A rectanglular path. Inherits Contour.
 class Rectangle(Contour):
 
@@ -345,6 +350,6 @@ class HolePath:
             lines.append(f'G0 X{hole[0]} Y{hole[1]} Z{retractHeight}')
             lines.append(f'G1 X{hole[0]} Y{hole[1]} Z{-extraDepth} F{plungeRate}')
             lines.append(f'G0 X{hole[0]} Y{hole[1]} Z{retractHeight}')
-        return lines
+        return (lines, None)
 
 
