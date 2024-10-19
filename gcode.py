@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from paths import *
 
 def generate_nc_files(contour_paths, basename):
     oldTypes = []
@@ -28,7 +29,9 @@ def generate_nc_files(contour_paths, basename):
             lines.append('%\n')
             f.writelines(lines)
         
-        plt.plot(contour_paths[i][1].xVals, contour_paths[i][1].yVals)
+        plt.plot(contour_paths[i][1].xVals, contour_paths[i][1].yVals, linestyle='solid')
+        if isinstance(contour_paths[i][1], Contour):
+            plt.plot(contour_paths[i][2][0], contour_paths[i][2][1], linestyle='dashed')            
 
     plt.gca().axis('equal')
     plt.title(basename)

@@ -213,10 +213,13 @@ class Contour:
         curY += -dx * normFact * inFact
         return curX, curY
 
-    # Get an array of strings representing the lines of gcode to follow the contour
-    def get_gcode(self, partDepth, retractHeight, bitDiam, bitOut, feedRate, plungeRate, spindleSpeed, passes=1, direction=1, finalPassDepth=0, extraDepth=0.05, spiral=False):
+    # Returns a tuple: (list of strings representing the lines of gcode to follow the contour, tuple of (xVals, yVals) to plot motion)
+    def get_gcode(self, partDepth, retractHeight, bitDiam, bitOut, feedRate, plungeRate, spindleSpeed, passes=1, direction=1, finalPassDepth=0, finalPassRate=None, extraDepth=0.05, spiral=False):
 
         depth_per_pass = (partDepth + extraDepth - finalPassDepth) / passes
+        fpr = finalPassRate + 0
+        if(finalPassRate is None):
+            fpr = feedRate + 0
         points = len(self.xVals)
         inFact = 1 if bitOut else -1
         startX, startY = self.getOffsetPoint(0, bitDiam, inFact)
@@ -226,10 +229,17 @@ class Contour:
             curZ = (lambda p, i: partDepth - depth_per_pass*p - depth_per_pass*i/points) 
         else:
             curZ = (lambda p, i: partDepth - depth_per_pass*(p+1))
+        
+        offsetX = []
+        offsetY = []
+        for i in range(points):
+            curX, curY = self.getOffsetPoint(i, bitDiam, inFact)
+            offsetX.append(curX)
+            offsetY.append(curY)
 
         for passNum in range(passes):
             for i in range(points):
-                curX, curY = self.getOffsetPoint(i, bitDiam, inFact)
+                curX, curY = offsetX[i], offsetY[i]
                 curLine = f'G1 X{curX} Y{curY} Z{curZ(passNum, i)}'
                 F = ''
                 if(spiral):   
@@ -245,13 +255,13 @@ class Contour:
         if spiral or (finalPassDepth > 0):
             lines.append(f'G1 X{startX} Y{startY} Z{-extraDepth} F{plungeRate}')
             for i in range(1, points):
-                curX, curY = self.getOffsetPoint(i, bitDiam, inFact)
-                curLine = f'G1 X{curX} Y{curY}' + (f' F{feedRate}' if (i==1) else '')
+                curX, curY = offsetX[i], offsetY[i]
+                curLine = f'G1 X{curX} Y{curY}' + (f' F{fpr}' if (i==1) else '')
                 lines.append(curLine)
 
         lines.append(f'G0 X{startX} Y{startY} Z{retractHeight}')
 
-        return lines
+        return (lines, (offsetX, offsetY))
     
 # An elliptical path. Inherits Contour.
 class Ellipse(Contour):

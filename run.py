@@ -27,10 +27,10 @@ with open(filename, 'r') as user:
 ncInfo = []
 for i in range(count // 2):
     createObj = f'c = {pathStrings[i]}'
-    createNC = f'lines = c.get_gcode({settingStrings[i]})'
+    createNC = f'lines, drill_path = c.get_gcode({settingStrings[i]})'
     exec(createObj)
     exec(createNC)
-    ncInfo.append([lines, c])
+    ncInfo.append([lines, c, drill_path])
 
 generate_nc_files(ncInfo, f'ncFiles/{sys.argv[1]}')
 
