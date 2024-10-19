@@ -41,6 +41,12 @@ Ellipse(100,              100,                (0, 0))
 note: Ellipse parameters are identical to that of Rectangle, and the ellipse generated will be bounded by the rectangle that is formed
 with the specified parameters. (i.e. Ellipse(10, 10, (0, 0)) will be exactly contained by a rectangle at 0, 0, with width and height 10)
 
+Circle:
+This creates a circular path. The following line explains how to use it:
+Circle((0, 0),                       100)
+       ^^^^^^                        ^^^ 
+       location of the center        radius of the circle
+       of the circle
 
 HolePath:
 This one's slightly different. It creates a path for drilling simple holes, just down and up. There is no x and y movement while in the part.
