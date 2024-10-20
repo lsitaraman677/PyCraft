@@ -217,9 +217,11 @@ class Contour:
     def get_gcode(self, partDepth, retractHeight, bitDiam, bitOut, feedRate, plungeRate, spindleSpeed, passes=1, direction=1, finalPassDepth=0, finalPassRate=None, extraDepth=0.05, spiral=False):
 
         depth_per_pass = (partDepth + extraDepth - finalPassDepth) / passes
-        fpr = finalPassRate + 0
+        fpr = 0
         if(finalPassRate is None):
             fpr = feedRate + 0
+        else:
+            fpr = finalPassRate + 0
         points = len(self.xVals)
         inFact = 1 if bitOut else -1
         startX, startY = self.getOffsetPoint(0, bitDiam, inFact)
